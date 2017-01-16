@@ -103,3 +103,7 @@ Output variables:
  - CM_TAG_DIFF
  - CM_VERSION_GIT
 ```
+
+# function `generate_format_command(CMD_NAME CM_CLANG_FORMAT_VER)`
+
+Adds a new make target `CMD_NAME` that formats the entire source code with clang-format

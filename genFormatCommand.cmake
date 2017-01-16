@@ -23,19 +23,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# include all list files
+set( __generate_format_command__DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
-if( CMAKE_BUILD_UTILS_IS_LOEADED )
-  return()
-endif( CMAKE_BUILD_UTILS_IS_LOEADED )
+# Adds a new make target CMD_NAME that formats the entire source code with clang-format
+function( generate_format_command CMD_NAME CM_CLANG_FORMAT_VER )
+  set( FILE_IN  "${__generate_format_command__DIR}/templates/cmake_format.cmake.in" )
+  set( FILE_OUT "${PROJECT_BINARY_DIR}/cmake_format.cmake" )
 
-file( GLOB MODULE_LIST ${CMAKE_CURRENT_LIST_DIR}/*.cmake )
+  list( APPEND SOURCES_RAW ${${PROJECT_NAME}_ALL_UNASIGNED_HPP} )
+  list( APPEND SOURCES_RAW ${${PROJECT_NAME}_ALL_UNASIGNED_CPP} )
+  list( SORT SOURCES_RAW )
 
-foreach( I IN LISTS MODULE_LIST )
-  if( CMAKE_CURRENT_LIST_FILE STREQUAL I )
-    continue()
-  endif( CMAKE_CURRENT_LIST_FILE STREQUAL I )
-  include( ${I} )
-endforeach( I IN LISTS MODULE_LIST )
+  foreach( I IN LISTS SOURCES_RAW )
+    string( APPEND CM_ALL_SOURCE_FILES "   ${I}\n" )
+  endforeach( I IN LISTS SOURCES_RAW )
 
-set( CMAKE_BUILD_UTILS_IS_LOEADED 1 )
+  configure_file( "${FILE_IN}" "${FILE_OUT}" @ONLY )
+  add_custom_target( ${CMD_NAME} COMMAND ${CMAKE_COMMAND} -P ${FILE_OUT} )
+endfunction( generate_format_command )
