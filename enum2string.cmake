@@ -1,16 +1,27 @@
-# Copyright (C) 2016 EEnginE project
+# Copyright (c) 2017, Daniel Mensinger
+# All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
 #
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Usage:
 # enum2str_generate
@@ -24,206 +35,206 @@
 #    USE_CONSTEXPR  <whether to use constexpr or not (default: off)>
 #    USE_C_STRINGS  <whether to use c strings instead of std::string or not (default: off)>
 function( enum2str_generate )
-   set( TARGET_LIST PATH CLASS_NAME FUNC_NAME INCLUDES ENUMS NAMESPACE BLACKLIST USE_CONSTEXPR USE_C_STRINGS )
-   split_arg_list( "${TARGET_LIST}" "${ARGV}" )
+  set( TARGET_LIST PATH CLASS_NAME FUNC_NAME INCLUDES ENUMS NAMESPACE BLACKLIST USE_CONSTEXPR USE_C_STRINGS )
+  split_arg_list( "${TARGET_LIST}" "${ARGV}" )
 
-   if( USE_C_STRINGS )
-      set( STRING_TYPE "const char *" )
-   else( USE_C_STRINGS )
-      set( STRING_TYPE "std::string " )
-   endif( USE_C_STRINGS )
+  if( USE_C_STRINGS )
+    set( STRING_TYPE "const char *" )
+  else( USE_C_STRINGS )
+    set( STRING_TYPE "std::string " )
+  endif( USE_C_STRINGS )
 
-   message( STATUS "Generating enum2str files" )
+  message( STATUS "Generating enum2str files" )
 
-   __enum2str_checkSet( PATH )
-   __enum2str_checkSet( CLASS_NAME )
-   __enum2str_checkSet( NAMESPACE )
-   __enum2str_checkSet( FUNC_NAME )
+  __enum2str_checkSet( PATH )
+  __enum2str_checkSet( CLASS_NAME )
+  __enum2str_checkSet( NAMESPACE )
+  __enum2str_checkSet( FUNC_NAME )
 
-   set( HPP_FILE "${PATH}/${CLASS_NAME}.hpp" )
-   set( CPP_FILE "${PATH}/${CLASS_NAME}.cpp" )
+  set( HPP_FILE "${PATH}/${CLASS_NAME}.hpp" )
+  set( CPP_FILE "${PATH}/${CLASS_NAME}.cpp" )
 
-   enum2str_init()
+  enum2str_init()
 
-   #########################
-   # Loading include files #
-   #########################
+  #########################
+  # Loading include files #
+  #########################
 
-   get_property( INC_DIRS DIRECTORY ${CMAKE_HOME_DIRECTORY} PROPERTY INCLUDE_DIRECTORIES )
-   message( STATUS "  - Resolving includes:" )
+  get_property( INC_DIRS DIRECTORY ${CMAKE_HOME_DIRECTORY} PROPERTY INCLUDE_DIRECTORIES )
+  message( STATUS "  - Resolving includes:" )
 
-   foreach( I IN LISTS INCLUDES )
-      set( FOUND 0 )
-      set( TEMP )
-      find_path( TEMP NAMES ${I} )
-      list( APPEND INC_DIRS ${TEMP} )
-      foreach( J IN LISTS INC_DIRS )
-         if( EXISTS "${J}/${I}" )
-            message( STATUS "    - ${I}: ${J}/${I}" )
-            file( READ "${J}/${I}" TEMP )
-            string( APPEND RAW_DATA "${TEMP}" )
-            set( FOUND 1 )
-            break()
-         endif( EXISTS "${J}/${I}" )
-      endforeach( J IN LISTS INC_DIRS )
+  foreach( I IN LISTS INCLUDES )
+    set( FOUND 0 )
+    set( TEMP )
+    find_path( TEMP NAMES ${I} )
+    list( APPEND INC_DIRS ${TEMP} )
+    foreach( J IN LISTS INC_DIRS )
+      if( EXISTS "${J}/${I}" )
+        message( STATUS "    - ${I}: ${J}/${I}" )
+        file( READ "${J}/${I}" TEMP )
+        string( APPEND RAW_DATA "${TEMP}" )
+        set( FOUND 1 )
+        break()
+      endif( EXISTS "${J}/${I}" )
+    endforeach( J IN LISTS INC_DIRS )
 
-      if( NOT "${FOUND}" STREQUAL "1" )
-         message( FATAL_ERROR "Unable to find ${I}! (Try running include_directories(...))" )
-      endif( NOT "${FOUND}" STREQUAL "1" )
-   endforeach( I IN LISTS INCLUDES )
+    if( NOT "${FOUND}" STREQUAL "1" )
+      message( FATAL_ERROR "Unable to find ${I}! (Try running include_directories(...))" )
+    endif( NOT "${FOUND}" STREQUAL "1" )
+  endforeach( I IN LISTS INCLUDES )
 
-   #####################
-   # Finding the enums #
-   #####################
+  #####################
+  # Finding the enums #
+  #####################
 
-   set( CONSTANSTS 0 )
+  set( CONSTANSTS 0 )
 
-   foreach( I IN LISTS ENUMS )
-      set( ENUM_NS "" )
-      string( REGEX REPLACE ".*::" "" ENUM_NAME "${I}" )
-      if( "${I}" MATCHES "(.*)::[^:]+" )
-         string( REGEX REPLACE "(.*)::[^:]+" "\\1::" ENUM_NS "${I}" )
-      endif( "${I}" MATCHES "(.*)::[^:]+" )
+  foreach( I IN LISTS ENUMS )
+    set( ENUM_NS "" )
+    string( REGEX REPLACE ".*::" "" ENUM_NAME "${I}" )
+    if( "${I}" MATCHES "(.*)::[^:]+" )
+      string( REGEX REPLACE "(.*)::[^:]+" "\\1::" ENUM_NS "${I}" )
+    endif( "${I}" MATCHES "(.*)::[^:]+" )
 
-      string( REGEX MATCH "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?{[^}]*}" P1 "${RAW_DATA}" )
+    string( REGEX MATCH "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?{[^}]*}" P1 "${RAW_DATA}" )
+    if( "${P1}" STREQUAL "" )
+      string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${RAW_DATA}" )
+
       if( "${P1}" STREQUAL "" )
-         string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${RAW_DATA}" )
-
-         if( "${P1}" STREQUAL "" )
-            message( WARNING "enum '${I}' not found!" )
-            continue()
-         endif( "${P1}" STREQUAL "" )
+        message( WARNING "enum '${I}' not found!" )
+        continue()
       endif( "${P1}" STREQUAL "" )
-      string( REGEX REPLACE "//[^\n]*" "" P1 "${P1}" )
-      string( REGEX REPLACE "/\\*[^\\*]*\\*/" "" P1 "${P1}" )
-      string( REGEX REPLACE "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?" "" P1 "${P1}" )
-      string( REGEX REPLACE "enum[ \t\n]{" "" P1 "${P1}" )
-      string( REGEX REPLACE "}[ \t\n]*${ENUM_NAME}[ \t\n]*;" "" P1 "${P1}" )
-      string( REGEX REPLACE "[ \t\n{};]" "" P1 "${P1}" )
-      string( REGEX REPLACE ",$" "" P1 "${P1}" ) # Remove trailing ,
-      string( REGEX REPLACE "," ";" L1 "${P1}" ) # Make a List
+    endif( "${P1}" STREQUAL "" )
+    string( REGEX REPLACE "//[^\n]*" "" P1 "${P1}" )
+    string( REGEX REPLACE "/\\*[^\\*]*\\*/" "" P1 "${P1}" )
+    string( REGEX REPLACE "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?" "" P1 "${P1}" )
+    string( REGEX REPLACE "enum[ \t\n]{" "" P1 "${P1}" )
+    string( REGEX REPLACE "}[ \t\n]*${ENUM_NAME}[ \t\n]*;" "" P1 "${P1}" )
+    string( REGEX REPLACE "[ \t\n{};]" "" P1 "${P1}" )
+    string( REGEX REPLACE ",$" "" P1 "${P1}" ) # Remove trailing ,
+    string( REGEX REPLACE "," ";" L1 "${P1}" ) # Make a List
 
-      set( ENUMS_TO_USE )
-      set( RESULTS )
+    set( ENUMS_TO_USE )
+    set( RESULTS )
 
-      # Checking enums
-      foreach( J IN LISTS L1 )
-         set( EQUALS "" )
-         if( "${J}" MATCHES ".+=.+" )
-            string( REGEX REPLACE ".+=[ \n\t]*([^ \n\t]+)[ \n\t]*" "\\1" EQUALS "${J}" )
-         endif( "${J}" MATCHES ".+=.+" )
-         string( REGEX REPLACE "[ \t\n]*=.*" "" J "${J}" )
+    # Checking enums
+    foreach( J IN LISTS L1 )
+      set( EQUALS "" )
+      if( "${J}" MATCHES ".+=.+" )
+        string( REGEX REPLACE ".+=[ \n\t]*([^ \n\t]+)[ \n\t]*" "\\1" EQUALS "${J}" )
+      endif( "${J}" MATCHES ".+=.+" )
+      string( REGEX REPLACE "[ \t\n]*=.*" "" J "${J}" )
 
-         if( "${J}" IN_LIST BLACKLIST )
-            continue()
-         endif( "${J}" IN_LIST BLACKLIST )
+      if( "${J}" IN_LIST BLACKLIST )
+        continue()
+      endif( "${J}" IN_LIST BLACKLIST )
 
-         if( "${EQUALS}" STREQUAL "" )
-            list( APPEND ENUMS_TO_USE "${J}" )
-         else( "${EQUALS}" STREQUAL "" )
-            # Avoid duplicates:
-            if( "${J}" IN_LIST ENUMS_TO_USE )
-               continue()
-            endif( "${J}" IN_LIST ENUMS_TO_USE )
-            if( "${EQUALS}" IN_LIST ENUMS_TO_USE )
-               continue()
-            endif( "${EQUALS}" IN_LIST ENUMS_TO_USE )
-            if( "${EQUALS}" IN_LIST RESULTS )
-               continue()
-            endif( "${EQUALS}" IN_LIST RESULTS )
+      if( "${EQUALS}" STREQUAL "" )
+        list( APPEND ENUMS_TO_USE "${J}" )
+      else( "${EQUALS}" STREQUAL "" )
+        # Avoid duplicates:
+        if( "${J}" IN_LIST ENUMS_TO_USE )
+          continue()
+        endif( "${J}" IN_LIST ENUMS_TO_USE )
+        if( "${EQUALS}" IN_LIST ENUMS_TO_USE )
+          continue()
+        endif( "${EQUALS}" IN_LIST ENUMS_TO_USE )
+        if( "${EQUALS}" IN_LIST RESULTS )
+          continue()
+        endif( "${EQUALS}" IN_LIST RESULTS )
 
-            list( APPEND RESULTS "${EQUALS}" )
-            list( APPEND ENUMS_TO_USE "${J}" )
-         endif( "${EQUALS}" STREQUAL "" )
-      endforeach( J IN LISTS L1 )
+        list( APPEND RESULTS "${EQUALS}" )
+        list( APPEND ENUMS_TO_USE "${J}" )
+      endif( "${EQUALS}" STREQUAL "" )
+    endforeach( J IN LISTS L1 )
 
-      enum2str_add( "${I}" )
-      list( LENGTH ENUMS_TO_USE NUM_ENUMS )
-      math( EXPR CONSTANSTS "${CONSTANSTS} + ${NUM_ENUMS}" )
-   endforeach( I IN LISTS ENUMS )
+    enum2str_add( "${I}" )
+    list( LENGTH ENUMS_TO_USE NUM_ENUMS )
+    math( EXPR CONSTANSTS "${CONSTANSTS} + ${NUM_ENUMS}" )
+  endforeach( I IN LISTS ENUMS )
 
-   list( LENGTH ENUMS NUM_ENUMS )
-   message( STATUS "  - Generated ${NUM_ENUMS} enum2str functions" )
-   message( STATUS "  - Found a total of ${CONSTANSTS} constants" )
+  list( LENGTH ENUMS NUM_ENUMS )
+  message( STATUS "  - Generated ${NUM_ENUMS} enum2str functions" )
+  message( STATUS "  - Found a total of ${CONSTANSTS} constants" )
 
-   enum2str_end()
-   message( "" )
+  enum2str_end()
+  message( "" )
 endfunction( enum2str_generate )
 
 macro( __enum2str_checkSet )
-   if( NOT DEFINED ${ARGV0} )
-      message( FATAL_ERROR "enum2str_generate: ${ARGV0} not set" )
-   endif( NOT DEFINED ${ARGV0} )
+  if( NOT DEFINED ${ARGV0} )
+    message( FATAL_ERROR "enum2str_generate: ${ARGV0} not set" )
+  endif( NOT DEFINED ${ARGV0} )
 endmacro( __enum2str_checkSet )
 
 function( enum2str_add )
-   if( USE_CONSTEXPR )
-      file( APPEND "${HPP_FILE}" "   /*!\n    * \\brief Converts the enum ${ARGV0} to a c string\n" )
-      file( APPEND "${HPP_FILE}" "    * \\param _var The enum value to convert\n" )
-      file( APPEND "${HPP_FILE}" "    * \\returns _var converted to a c string\n    */\n" )
-      file( APPEND "${HPP_FILE}" "   static constexpr const char *${FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
-      file( APPEND "${HPP_FILE}" "      switch ( _var ) {\n" )
+  if( USE_CONSTEXPR )
+    file( APPEND "${HPP_FILE}" "   /*!\n    * \\brief Converts the enum ${ARGV0} to a c string\n" )
+    file( APPEND "${HPP_FILE}" "    * \\param _var The enum value to convert\n" )
+    file( APPEND "${HPP_FILE}" "    * \\returns _var converted to a c string\n    */\n" )
+    file( APPEND "${HPP_FILE}" "   static constexpr const char *${FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
+    file( APPEND "${HPP_FILE}" "      switch ( _var ) {\n" )
 
-      foreach( I IN LISTS ENUMS_TO_USE )
-         file( APPEND "${HPP_FILE}" "         case ${ENUM_NS}${I}: return \"${I}\";\n" )
-      endforeach( I IN LISTS ENUMS_TO_USE )
+    foreach( I IN LISTS ENUMS_TO_USE )
+      file( APPEND "${HPP_FILE}" "         case ${ENUM_NS}${I}: return \"${I}\";\n" )
+    endforeach( I IN LISTS ENUMS_TO_USE )
 
-      file( APPEND "${HPP_FILE}" "         default: return \"<UNKNOWN>\";\n" )
-      file( APPEND "${HPP_FILE}" "      }\n   }\n\n" )
-   else( USE_CONSTEXPR )
-      file( APPEND "${HPP_FILE}" "   static ${STRING_TYPE}${FUNC_NAME}( ${ARGV0} _var ) noexcept;\n" )
+    file( APPEND "${HPP_FILE}" "         default: return \"<UNKNOWN>\";\n" )
+    file( APPEND "${HPP_FILE}" "      }\n   }\n\n" )
+  else( USE_CONSTEXPR )
+    file( APPEND "${HPP_FILE}" "   static ${STRING_TYPE}${FUNC_NAME}( ${ARGV0} _var ) noexcept;\n" )
 
-      file( APPEND "${CPP_FILE}" "/*!\n * \\brief Converts the enum ${ARGV0} to a ${STRING_TYPE}\n" )
-      file( APPEND "${CPP_FILE}" " * \\param _var The enum value to convert\n" )
-      file( APPEND "${CPP_FILE}" " * \\returns _var converted to a ${STRING_TYPE}\n */\n" )
-      file( APPEND "${CPP_FILE}" "${STRING_TYPE}${CLASS_NAME}::${FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
-      file( APPEND "${CPP_FILE}" "   switch ( _var ) {\n" )
+    file( APPEND "${CPP_FILE}" "/*!\n * \\brief Converts the enum ${ARGV0} to a ${STRING_TYPE}\n" )
+    file( APPEND "${CPP_FILE}" " * \\param _var The enum value to convert\n" )
+    file( APPEND "${CPP_FILE}" " * \\returns _var converted to a ${STRING_TYPE}\n */\n" )
+    file( APPEND "${CPP_FILE}" "${STRING_TYPE}${CLASS_NAME}::${FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
+    file( APPEND "${CPP_FILE}" "   switch ( _var ) {\n" )
 
-      foreach( I IN LISTS ENUMS_TO_USE )
-         file( APPEND "${CPP_FILE}" "      case ${ENUM_NS}${I}: return \"${I}\";\n" )
-      endforeach( I IN LISTS ENUMS_TO_USE )
+    foreach( I IN LISTS ENUMS_TO_USE )
+        file( APPEND "${CPP_FILE}" "      case ${ENUM_NS}${I}: return \"${I}\";\n" )
+    endforeach( I IN LISTS ENUMS_TO_USE )
 
-      file( APPEND "${CPP_FILE}" "      default: return \"<UNKNOWN>\";\n" )
-      file( APPEND "${CPP_FILE}" "   }\n}\n\n" )
+    file( APPEND "${CPP_FILE}" "      default: return \"<UNKNOWN>\";\n" )
+    file( APPEND "${CPP_FILE}" "   }\n}\n\n" )
    endif( USE_CONSTEXPR )
 endfunction( enum2str_add )
 
 
 function( enum2str_init )
-   string( TOUPPER ${CLASS_NAME} CLASS_NAME_UPPERCASE )
+  string( TOUPPER ${CLASS_NAME} CLASS_NAME_UPPERCASE )
 
-   file( WRITE  "${HPP_FILE}" "/*!\n" )
-   file( APPEND "${HPP_FILE}" "  * \\file ${CLASS_NAME}.hpp\n" )
-   file( APPEND "${HPP_FILE}" "  * \\warning This is an automatically generated file!\n" )
-   file( APPEND "${HPP_FILE}" "  */\n\n" )
-   file( APPEND "${HPP_FILE}" "#pragma once\n\n" )
-   file( APPEND "${HPP_FILE}" "#include <string>\n" )
+  file( WRITE  "${HPP_FILE}" "/*!\n" )
+  file( APPEND "${HPP_FILE}" "  * \\file ${CLASS_NAME}.hpp\n" )
+  file( APPEND "${HPP_FILE}" "  * \\warning This is an automatically generated file!\n" )
+  file( APPEND "${HPP_FILE}" "  */\n\n" )
+  file( APPEND "${HPP_FILE}" "#pragma once\n\n" )
+  file( APPEND "${HPP_FILE}" "#include <string>\n" )
 
-   foreach( I IN LISTS INCLUDES )
-      file( APPEND "${HPP_FILE}" "#include <${I}>\n" )
-   endforeach( I IN LISTS INCLUDES )
+  foreach( I IN LISTS INCLUDES )
+    file( APPEND "${HPP_FILE}" "#include <${I}>\n" )
+  endforeach( I IN LISTS INCLUDES )
 
-   file( APPEND "${HPP_FILE}" "\nnamespace ${NAMESPACE} {\n\n" )
-   file( APPEND "${HPP_FILE}" "class ${CLASS_NAME} {\n" )
-   file( APPEND "${HPP_FILE}" " public:\n" )
+  file( APPEND "${HPP_FILE}" "\nnamespace ${NAMESPACE} {\n\n" )
+  file( APPEND "${HPP_FILE}" "class ${CLASS_NAME} {\n" )
+  file( APPEND "${HPP_FILE}" " public:\n" )
 
-   if( NOT USE_CONSTEXPR )
-      file( WRITE  "${CPP_FILE}" "/*!\n" )
-      file( APPEND "${CPP_FILE}" "  * \\file ${CLASS_NAME}.cpp\n" )
-      file( APPEND "${CPP_FILE}" "  * \\warning This is an automatically generated file!\n" )
-      file( APPEND "${CPP_FILE}" "  */\n\n" )
-      file( APPEND "${CPP_FILE}" "#include \"${CLASS_NAME}.hpp\"\n\n" )
-      file( APPEND "${CPP_FILE}" "namespace ${NAMESPACE} {\n\n" )
-   endif( NOT USE_CONSTEXPR )
+  if( NOT USE_CONSTEXPR )
+    file( WRITE  "${CPP_FILE}" "/*!\n" )
+    file( APPEND "${CPP_FILE}" "  * \\file ${CLASS_NAME}.cpp\n" )
+    file( APPEND "${CPP_FILE}" "  * \\warning This is an automatically generated file!\n" )
+    file( APPEND "${CPP_FILE}" "  */\n\n" )
+    file( APPEND "${CPP_FILE}" "#include \"${CLASS_NAME}.hpp\"\n\n" )
+    file( APPEND "${CPP_FILE}" "namespace ${NAMESPACE} {\n\n" )
+  endif( NOT USE_CONSTEXPR )
 endfunction( enum2str_init )
 
 
 function( enum2str_end )
-   string( TOUPPER ${CLASS_NAME} CLASS_NAME_UPPERCASE )
+  string( TOUPPER ${CLASS_NAME} CLASS_NAME_UPPERCASE )
 
-   file( APPEND "${HPP_FILE}" "};\n\n}\n\n" )
-   if( NOT USE_CONSTEXPR )
-      file( APPEND "${CPP_FILE}" "\n}\n" )
-   endif( NOT USE_CONSTEXPR )
+  file( APPEND "${HPP_FILE}" "};\n\n}\n\n" )
+  if( NOT USE_CONSTEXPR )
+    file( APPEND "${CPP_FILE}" "\n}\n" )
+  endif( NOT USE_CONSTEXPR )
 
 endfunction( enum2str_end )
