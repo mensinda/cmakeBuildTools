@@ -82,9 +82,24 @@ Usage:
 
 # check_platform()
 
-Checks the the PLATFORM_TARGET list. Also generates a CM_${I} variable (= 0/1) for every target of
+Checks the the `PLATFORM_TARGET` list. Also generates a `CM_${I}` variable (= 0/1) for every target of
 each platform / OS.
 
 # function `select_sources()`
 
-Sets CM_CURRENT_SRC_CPP, CM_CURRENT_SRC_HPP and CURRENT_INCLUDE_DIRS for the current platform
+Sets `CM_CURRENT_SRC_CPP`, `CM_CURRENT_SRC_HPP` and `CURRENT_INCLUDE_DIRS` for the current platform
+
+# function `run_git()`
+
+Collects version information about the current git repository
+
+Output variables:
+```
+ - CMAKE_BUILD_TYPE (if not already set)
+ - DEBUG_LOGGING
+ - CM_VERSION_MAJOR
+ - CM_VERSION_MINOR
+ - CM_VERSION_SUBMINOR
+ - CM_TAG_DIFF
+ - CM_VERSION_GIT
+```
