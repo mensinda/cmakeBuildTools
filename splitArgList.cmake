@@ -38,6 +38,11 @@
 # #     BAR = "third;fourth"
 
 function( split_arg_list SECTIONS ARGS )
+  # clear vars
+  foreach( I IN LISTS SECTIONS )
+    set( ${I} "" )
+  endforeach( I IN LISTS SECTIONS )
+
   foreach( I IN LISTS ARGS )
     set( SKIP OFF )
     foreach( J IN LISTS SECTIONS )
@@ -57,12 +62,11 @@ function( split_arg_list SECTIONS ARGS )
       continue()
     endif( CURRENT_TARGET STREQUAL "" )
 
-    set( ${CURRENT_TARGET} "${${CURRENT_TARGET}};${I}" )
+    list( APPEND ${CURRENT_TARGET} "${I}" )
   endforeach( I IN LISTS ARGS )
 
   # Move vars to the parent scope
   foreach( I IN LISTS SECTIONS )
-    string( REGEX REPLACE "^;" "" ${I} "${${I}}" )
     if( I STREQUAL "" )
       continue()
     endif( I STREQUAL "" )
