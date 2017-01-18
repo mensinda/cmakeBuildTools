@@ -57,8 +57,9 @@ function( new_project_executable )
   endforeach( I IN LISTS TARGET_LIST )
 
   foreach( I IN LISTS DEPENDENCIES )
-    list( APPEND CM_CURRENT_LIB_DEP "${I}" )
+    string( APPEND CM_CURRENT_LIB_DEP "${I} " )
   endforeach()
+  string( STRIP "${CM_CURRENT_LIB_DEP}" CM_CURRENT_LIB_DEP )
 
   message( STATUS "Executable ${LIB_NAME}: (depends on: ${CM_CURRENT_LIB_DEP})" )
 
