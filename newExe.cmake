@@ -61,7 +61,6 @@ function( new_project_executable )
   endforeach()
 
   message( STATUS "Executable ${LIB_NAME}: (depends on: ${CM_CURRENT_LIB_DEP})" )
-  message( STATUS "  - Path: ${PATH}" )
 
   if( EXISTS ${PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )
