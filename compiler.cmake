@@ -32,39 +32,41 @@
 # SANITIZE:    sanitizer option. Will only be enabled on DEBUG build type and when the variable ENABLE_SANITIZERS is set
 # MIN_VERSION: the min. compiler version
 function( add_compiler COMPILER )
-   if( ${ARGC} LESS 1 )
-      message( FATAL_ERROR "function 'add_compiler' needs at least 1 parameters" )
-   endif( ${ARGC} LESS 1 )
+  if( ${ARGC} LESS 1 )
+    message( FATAL_ERROR "function 'add_compiler' needs at least 1 parameters" )
+  endif( ${ARGC} LESS 1 )
 
-   if( NOT CMAKE_CXX_COMPILER_ID STREQUAL COMPILER )
-      return()
-   endif( NOT CMAKE_CXX_COMPILER_ID STREQUAL COMPILER )
+  if( NOT CMAKE_CXX_COMPILER_ID STREQUAL COMPILER )
+    return()
+  endif( NOT CMAKE_CXX_COMPILER_ID STREQUAL COMPILER )
 
-   message( STATUS "The detected compiler is: ${COMPILER}" )
+  message( STATUS "The detected compiler is: ${COMPILER}" )
 
-   set( CURRENT_TARGET "" )
-   set( TARGET_LIST ALL DEBUG RELEASE SANITIZE MIN_VERSION )
+  set( CURRENT_TARGET "" )
+  set( TARGET_LIST ALL DEBUG RELEASE SANITIZE MIN_VERSION )
 
-   split_arg_list( "${TARGET_LIST}" "${ARGN}" )
+  split_arg_list( "${TARGET_LIST}" "${ARGN}" )
 
-   if( DEFINED MIN_VERSION )
-      if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
-         message( SEND_ERROR "Minimum compiler version is ${MIN_VERSION} but the current version is ${CMAKE_CXX_COMPILER_VERSION}" )
-      endif( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
-   endif( DEFINED MIN_VERSION )
+  if( DEFINED MIN_VERSION )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
+        message( SEND_ERROR "Minimum compiler version is ${MIN_VERSION} but the current version is ${CMAKE_CXX_COMPILER_VERSION}" )
+    endif( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
+  endif( DEFINED MIN_VERSION )
 
-   if( ENABLE_SANITIZERS )
-      set( DEBUG "${DEBUG};${SANITIZE}" )
-      message( STATUS "Using sanitizer(s) ${SANITIZE} (change with -DENABLE_SANITIZERS)" )
-   else( ENABLE_SANITIZERS )
-      message( STATUS "Use no sanitizer(s) (change with -DENABLE_SANITIZERS)" )
-   endif( ENABLE_SANITIZERS )
+  if( ENABLE_SANITIZERS )
+    set( DEBUG "${DEBUG};${SANITIZE}" )
+    message( STATUS "Using sanitizer(s) ${SANITIZE} (change with -DENABLE_SANITIZERS)" )
+  else( ENABLE_SANITIZERS )
+    message( STATUS "Use no sanitizer(s) (change with -DENABLE_SANITIZERS)" )
+  endif( ENABLE_SANITIZERS )
 
-   # List --> string
-   string( REGEX REPLACE ";" " " ALL     "${ALL}" )
-   string( REGEX REPLACE ";" " " DEBUG   "${DEBUG}" )
-   string( REGEX REPLACE ";" " " RELEASE "${RELEASE}" )
+  # List --> string
+  string( REGEX REPLACE ";" " " ALL     "${ALL}" )
+  string( REGEX REPLACE ";" " " DEBUG   "${DEBUG}" )
+  string( REGEX REPLACE ";" " " RELEASE "${RELEASE}" )
 
-   set( CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${ALL} ${DEBUG}"   PARENT_SCOPE )
-   set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ALL} ${RELEASE}" PARENT_SCOPE )
+  set( CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${ALL} ${DEBUG}"   PARENT_SCOPE )
+  set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ALL} ${RELEASE}" PARENT_SCOPE )
+
+  message( "" )
 endfunction( add_compiler )

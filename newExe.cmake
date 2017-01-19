@@ -36,8 +36,10 @@
 # Variables available in the template:
 #    CM_CURRENT_SRC_CPP
 #    CM_CURRENT_SRC_HPP
-#    CM_CURRENT_LIB_LC
-#    CM_CURRENT_LIB_UC
+#    CM_CURRENT_EXE_SRC
+#    CM_CURRENT_EXE_INC
+#    CM_CURRENT_EXE_LC
+#    CM_CURRENT_EXE_UC
 #    CURRENT_INCLUDE_DIRS
 #
 # Exported variables (multiple calls to new_project_executable will extend these lists)
@@ -50,6 +52,11 @@ function( new_project_executable )
   set( TARGET_LIST NAME PATH TEMPLATE DEPENDENCIES )
   split_arg_list( "${TARGET_LIST}" "${ARGV}" )
 
+  set( CM_CURRENT_EXE_LC  ${NAME} )
+  string( TOUPPER ${NAME} CM_CURRENT_EXE_UC )
+  set( CM_CURRENT_EXE_SRC "${CM_CURRENT_EXE_UC}_SRC" )
+  set( CM_CURRENT_EXE_INC "${CM_CURRENT_EXE_UC}_INC" )
+
   foreach( I IN ITEMS NAME PATH TEMPLATE )
     if( "${${I}}" STREQUAL "" )
       message( ERROR "Invalid use of new_project_executable: Section ${I} not defined!" )
@@ -57,11 +64,11 @@ function( new_project_executable )
   endforeach( I IN LISTS TARGET_LIST )
 
   foreach( I IN LISTS DEPENDENCIES )
-    string( APPEND CM_CURRENT_LIB_DEP "${I} " )
+    string( APPEND CM_CURRENT_EXE_DEP "${I} " )
   endforeach()
-  string( STRIP "${CM_CURRENT_LIB_DEP}" CM_CURRENT_LIB_DEP )
+  string( STRIP "${CM_CURRENT_EXE_DEP}" CM_CURRENT_EXE_DEP )
 
-  message( STATUS "Executable ${LIB_NAME}: (depends on: ${CM_CURRENT_LIB_DEP})" )
+  message( STATUS "Executable ${CM_CURRENT_EXE_LC}: (depends on: ${CM_CURRENT_EXE_DEP})" )
 
   if( EXISTS ${PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )
@@ -74,11 +81,6 @@ function( new_project_executable )
   select_sources() # Sets CM_CURRENT_SRC_CPP and CM_CURRENT_SRC_HPP and CURRENT_INCLUDE_DIRS
 
   list( APPEND ${PROJECT_NAME}_SUBDIR_LIST "${PATH}" )
-
-  set( CM_CURRENT_LIB_LC  ${NAME} )
-  string( TOUPPER ${NAME} CM_CURRENT_LIB_UC )
-  set( CM_CURRENT_LIB_SRC "${CM_CURRENT_LIB_UC}_SRC" )
-  set( CM_CURRENT_LIB_INC "${CM_CURRENT_LIB_UC}_INC" )
 
   configure_file( "${TEMPLATE}" "${PATH}/CMakeLists.txt" @ONLY )
   set( ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )

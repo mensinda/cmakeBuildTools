@@ -108,7 +108,7 @@ Output variables:
 
 Adds a new make target `CMD_NAME` that formats the entire source code with clang-format
 
-# function new_project_library(...)
+# function `new_project_library(...)`
 
 ```cmake
 new_project_library searches for source files in PATH and generates a CMakeLists.txt.
@@ -124,11 +124,43 @@ new_project_library
 Variables available in the template:
    CM_CURRENT_SRC_CPP
    CM_CURRENT_SRC_HPP
+   CM_CURRENT_LIB_SRC
+   CM_CURRENT_LIB_INC
    CM_CURRENT_LIB_LC
    CM_CURRENT_LIB_UC
+   CURRENT_INCLUDE_DIRS
 
     Exported variables (multiple calls to new_project_library will extend these lists)
    ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES  <List of all directories>
+   ${PROJECT_NAME}_SUBDIR_LIST              <List of all generated subdirectories>
+   ${PROJECT_NAME}_ALL_UNASIGNED_<H,C>PP    <List of ALL source files (has a CPP and HPP version)>
+   ${PROJECT_NAME}_ALL_SRC_${I}_<H,C>PP     <List of source files for platform target ${I} (has a CPP and HPP version)>
+   ${PROJECT_NAME}_ALL_SRC_ALL_<H,C>PP      <List of source files for all platform targets (has a CPP and HPP version)>
+```
+
+# function `new_project_executable`
+
+```cmake
+new_project_executable searches for source files in PATH and generates a CMakeLists.txt.
+The (optional) CMakeScript.cmake in PATH will be executed first
+
+Usage:
+new_project_executable
+   NAME         <Name of the library>
+   PATH         <path to the source dir>
+   TEMPLATE     <path to the CMake template file>
+   DEPENDENCIES <dependencies (optional)>
+
+Variables available in the template:
+   CM_CURRENT_SRC_CPP
+   CM_CURRENT_SRC_HPP
+   CM_CURRENT_EXE_SRC
+   CM_CURRENT_EXE_INC
+   CM_CURRENT_EXE_LC
+   CM_CURRENT_EXE_UC
+   CURRENT_INCLUDE_DIRS
+
+Exported variables (multiple calls to new_project_executable will extend these lists)
    ${PROJECT_NAME}_SUBDIR_LIST              <List of all generated subdirectories>
    ${PROJECT_NAME}_ALL_UNASIGNED_<H,C>PP    <List of ALL source files (has a CPP and HPP version)>
    ${PROJECT_NAME}_ALL_SRC_${I}_<H,C>PP     <List of source files for platform target ${I} (has a CPP and HPP version)>

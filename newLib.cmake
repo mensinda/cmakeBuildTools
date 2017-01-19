@@ -36,8 +36,11 @@
 # Variables available in the template:
 #    CM_CURRENT_SRC_CPP
 #    CM_CURRENT_SRC_HPP
+#    CM_CURRENT_LIB_SRC
+#    CM_CURRENT_LIB_INC
 #    CM_CURRENT_LIB_LC
 #    CM_CURRENT_LIB_UC
+#    CURRENT_INCLUDE_DIRS
 #
 # Exported variables (multiple calls to new_project_library will extend these lists)
 #    ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES  <List of all directories>
@@ -50,6 +53,11 @@ function( new_project_library )
   set( TARGET_LIST NAME PATH TEMPLATE DEPENDENCIES )
   split_arg_list( "${TARGET_LIST}" "${ARGV}" )
 
+  set( CM_CURRENT_LIB_LC  ${NAME} )
+  string( TOUPPER ${NAME} CM_CURRENT_LIB_UC )
+  set( CM_CURRENT_LIB_SRC "${CM_CURRENT_LIB_UC}_SRC" )
+  set( CM_CURRENT_LIB_INC "${CM_CURRENT_LIB_UC}_INC" )
+
   foreach( I IN ITEMS NAME PATH TEMPLATE )
     if( "${${I}}" STREQUAL "" )
       message( ERROR "Invalid use of new_project_library: Section ${I} not defined!" )
@@ -61,7 +69,7 @@ function( new_project_library )
   endforeach()
   string( STRIP "${CM_CURRENT_LIB_DEP}" CM_CURRENT_LIB_DEP )
 
-  message( STATUS "Library ${LIB_NAME}: (depends on: ${CM_CURRENT_LIB_DEP})" )
+  message( STATUS "Library ${CM_CURRENT_LIB_LC}: (depends on: ${CM_CURRENT_LIB_DEP})" )
 
   if( EXISTS ${PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )
@@ -79,11 +87,6 @@ function( new_project_library )
   endforeach( I IN LISTS CURRENT_INCLUDE_DIRS )
 
   list( APPEND ${PROJECT_NAME}_SUBDIR_LIST "${PATH}" )
-
-  set( CM_CURRENT_LIB_LC  ${NAME} )
-  string( TOUPPER ${NAME} CM_CURRENT_LIB_UC )
-  set( CM_CURRENT_LIB_SRC "${CM_CURRENT_LIB_UC}_SRC" )
-  set( CM_CURRENT_LIB_INC "${CM_CURRENT_LIB_UC}_INC" )
 
   configure_file( "${TEMPLATE}" "${PATH}/CMakeLists.txt" @ONLY )
   set( ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )
