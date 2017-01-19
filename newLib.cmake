@@ -50,45 +50,48 @@
 #    ${PROJECT_NAME}_ALL_SRC_ALL_<H,C>PP      <List of source files for all platform targets (has a CPP and HPP version)>
 function( new_project_library )
   set( DEPENDENCIES "" )
-  set( TARGET_LIST NAME PATH TEMPLATE DEPENDENCIES )
-  split_arg_list( "${TARGET_LIST}" "${ARGV}" )
 
-  set( CM_CURRENT_LIB_LC  ${NAME} )
-  string( TOUPPER ${NAME} CM_CURRENT_LIB_UC )
+  set( options )
+  set( oneValueArgs   NAME PATH TEMPLATE )
+  set( multiValueArgs DEPENDENCIES )
+  cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+
+  set( CM_CURRENT_LIB_LC  ${OPTS_NAME} )
+  string( TOUPPER ${OPTS_NAME} CM_CURRENT_LIB_UC )
   set( CM_CURRENT_LIB_SRC "${CM_CURRENT_LIB_UC}_SRC" )
   set( CM_CURRENT_LIB_INC "${CM_CURRENT_LIB_UC}_INC" )
 
-  foreach( I IN ITEMS NAME PATH TEMPLATE )
-    if( "${${I}}" STREQUAL "" )
+  foreach( I IN LISTS oneValueArgs )
+    if( "${OPTS_${I}}" STREQUAL "" )
       message( ERROR "Invalid use of new_project_library: Section ${I} not defined!" )
-    endif( "${${I}}" STREQUAL "" )
-  endforeach( I IN LISTS TARGET_LIST )
+    endif( "${OPTS_${I}}" STREQUAL "" )
+  endforeach( I IN LISTS oneValueArgs )
 
-  foreach( I IN LISTS DEPENDENCIES )
+  foreach( I IN LISTS OPTS_DEPENDENCIES )
     string( APPEND CM_CURRENT_LIB_DEP "${I} " )
   endforeach()
   string( STRIP "${CM_CURRENT_LIB_DEP}" CM_CURRENT_LIB_DEP )
 
   message( STATUS "Library ${CM_CURRENT_LIB_LC}: (depends on: ${CM_CURRENT_LIB_DEP})" )
 
-  if( EXISTS ${PATH}/CMakeScript.cmake )
+  if( EXISTS ${OPTS_PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )
-    include( ${PATH}/CMakeScript.cmake )
-  endif( EXISTS ${PATH}/CMakeScript.cmake  )
+    include( ${OPTS_PATH}/CMakeScript.cmake )
+  endif( EXISTS ${OPTS_PATH}/CMakeScript.cmake  )
 
-  find_source_files(  PATH ${PATH} EXT_CPP "cpp" "cxx" "C" "c" EXT_HPP "hpp" "hxx" "H" "h" )
-  export_found_files( ${PATH} )
+  find_source_files(  PATH ${OPTS_PATH} EXT_CPP "cpp" "cxx" "C" "c" EXT_HPP "hpp" "hxx" "H" "h" )
+  export_found_files( ${OPTS_PATH} )
 
   select_sources() # Sets CM_CURRENT_SRC_CPP and CM_CURRENT_SRC_HPP and CURRENT_INCLUDE_DIRS
 
-  list( APPEND ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${PATH}" )
+  list( APPEND ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${OPTS_PATH}" )
   foreach( I IN LISTS CURRENT_INCLUDE_DIRS )
-    list( APPEND ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${PATH}/${I}" )
+    list( APPEND ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${OPTS_PATH}/${I}" )
   endforeach( I IN LISTS CURRENT_INCLUDE_DIRS )
 
-  list( APPEND ${PROJECT_NAME}_SUBDIR_LIST "${PATH}" )
+  list( APPEND ${PROJECT_NAME}_SUBDIR_LIST "${OPTS_PATH}" )
 
-  configure_file( "${TEMPLATE}" "${PATH}/CMakeLists.txt" @ONLY )
+  configure_file( "${OPTS_TEMPLATE}" "${OPTS_PATH}/CMakeLists.txt" @ONLY )
   set( ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )
   set( ${PROJECT_NAME}_SUBDIR_LIST             "${${PROJECT_NAME}_SUBDIR_LIST}"              PARENT_SCOPE )
 endfunction( new_project_library )

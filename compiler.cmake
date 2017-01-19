@@ -26,9 +26,12 @@
 # Set compiler flags
 #  1st parameter: the CMake compiler ID
 # Sections:
-# ALL:         compiler options for all build types
-# DEBUG:       compiler options only for the DEBUG build type
-# RELEASE:     compiler options only for the RELEASE build type
+# ALL:         c++ compiler options for all build types
+# DEBUG:       c++ compiler options only for the DEBUG build type
+# RELEASE:     c++ compiler options only for the RELEASE build type
+# C_ALL:       c compiler options for all build types
+# C_DEBUG:     c compiler options only for the DEBUG build type
+# C_RELEASE:   c compiler options only for the RELEASE build type
 # SANITIZE:    sanitizer option. Will only be enabled on DEBUG build type and when the variable ENABLE_SANITIZERS is set
 # MIN_VERSION: the min. compiler version
 function( add_compiler COMPILER )
@@ -42,31 +45,45 @@ function( add_compiler COMPILER )
 
   message( STATUS "The detected compiler is: ${COMPILER}" )
 
-  set( CURRENT_TARGET "" )
-  set( TARGET_LIST ALL DEBUG RELEASE SANITIZE MIN_VERSION )
+  set( options )
+  set( oneValueArgs   MIN_VERSION SANITIZE )
+  set( multiValueArgs ALL DEBUG RELEASE C_ALL C_DEBUG C_RELEASE )
+  cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  split_arg_list( "${TARGET_LIST}" "${ARGN}" )
-
-  if( DEFINED MIN_VERSION )
-    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
-        message( SEND_ERROR "Minimum compiler version is ${MIN_VERSION} but the current version is ${CMAKE_CXX_COMPILER_VERSION}" )
-    endif( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${MIN_VERSION}" )
-  endif( DEFINED MIN_VERSION )
+  if( DEFINED OPTS_MIN_VERSION )
+    if( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${OPTS_MIN_VERSION}" )
+        message( SEND_ERROR "Minimum compiler version is ${OPTS_MIN_VERSION} but the current version is ${CMAKE_CXX_COMPILER_VERSION}" )
+    endif( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "${OPTS_MIN_VERSION}" )
+  endif( DEFINED OPTS_MIN_VERSION )
 
   if( ENABLE_SANITIZERS )
-    set( DEBUG "${DEBUG};${SANITIZE}" )
-    message( STATUS "Using sanitizer(s) ${SANITIZE} (change with -DENABLE_SANITIZERS)" )
+    set( DEBUG "${DEBUG};${OPTS_SANITIZE}" )
+    message( STATUS "Using sanitizer(s) ${OPTS_SANITIZE} (change with -DENABLE_SANITIZERS)" )
   else( ENABLE_SANITIZERS )
     message( STATUS "Use no sanitizer(s) (change with -DENABLE_SANITIZERS)" )
   endif( ENABLE_SANITIZERS )
 
   # List --> string
-  string( REGEX REPLACE ";" " " ALL     "${ALL}" )
-  string( REGEX REPLACE ";" " " DEBUG   "${DEBUG}" )
-  string( REGEX REPLACE ";" " " RELEASE "${RELEASE}" )
+  string( REGEX REPLACE ";" " " C_ALL     "${OPTS_C_ALL}"     )
+  string( REGEX REPLACE ";" " " C_DEBUG   "${OPTS_C_DEBUG}"   )
+  string( REGEX REPLACE ";" " " C_RELEASE "${OPTS_C_RELEASE}" )
+  string( REGEX REPLACE ";" " " ALL       "${OPTS_ALL}"       )
+  string( REGEX REPLACE ";" " " DEBUG     "${OPTS_DEBUG}"     )
+  string( REGEX REPLACE ";" " " RELEASE   "${OPTS_RELEASE}"   )
 
-  set( CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   ${ALL} ${DEBUG}"   PARENT_SCOPE )
-  set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${ALL} ${RELEASE}" PARENT_SCOPE )
+  string( APPEND CMAKE_C_FLAGS           " ${C_ALL}"     )
+  string( APPEND CMAKE_C_FLAGS_DEBUG     " ${C_DEBUG}"   )
+  string( APPEND CMAKE_C_FLAGS_RELEASE   " ${C_RELEASE}" )
+  string( APPEND CMAKE_CXX_FLAGS         " ${ALL}"       )
+  string( APPEND CMAKE_CXX_FLAGS_DEBUG   " ${DEBUG}"     )
+  string( APPEND CMAKE_CXX_FLAGS_RELEASE " ${RELEASE}"   )
+
+  set( CMAKE_C_FLAGS           "${CMAKE_C_FLAGS}"           PARENT_SCOPE )
+  set( CMAKE_C_FLAGS_DEBUG     "${CMAKE_C_FLAGS_DEBUG}"     PARENT_SCOPE )
+  set( CMAKE_C_FLAGS_RELEASE   "${CMAKE_C_FLAGS_RELEASE}"   PARENT_SCOPE )
+  set( CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS}"         PARENT_SCOPE )
+  set( CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}"   PARENT_SCOPE )
+  set( CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" PARENT_SCOPE )
 
   message( "" )
 endfunction( add_compiler )

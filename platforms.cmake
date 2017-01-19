@@ -31,11 +31,13 @@
 #    TARGET <supported targets (aka subdirectories in the source tree) of the OS>
 #
 # Variables:
-#  PLATFORM_TARGET              - the secondary target of one OS
+#  PLATFORM_TARGET               - the secondary target of one OS
 #  ${PROJECT_NAME}_PLATFORM_LIST - list of all platforms added so far (output)
 function( add_platform )
-  set( TARGET_LIST OS TARGET )
-  split_arg_list( "${TARGET_LIST}" "${ARGV}" )
+  set( options )
+  set( oneValueArgs   OS )
+  set( multiValueArgs TARGET  )
+  cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
   foreach( I IN LISTS TARGET_LIST )
     if( "${${I}}" STREQUAL "" )
@@ -43,27 +45,27 @@ function( add_platform )
     endif( "${${I}}" STREQUAL "" )
   endforeach( I IN LISTS TARGET_LIST )
 
-  if( ${OS} )
+  if( ${OPTS_OS} )
     set( CURRENT_OS_STRING " (current)" )
-  endif( ${OS} )
+  endif( ${OPTS_OS} )
 
   # Generate the platform list
-  message( STATUS "Adding platform support for ${OS}${CURRENT_OS_STRING}. Supported targets are:" )
-  foreach( I IN LISTS TARGET )
-    string( TOUPPER "${OS}_${I}" VAR_NAME )
+  message( STATUS "Adding platform support for ${OPTS_OS}${CURRENT_OS_STRING}. Supported targets are:" )
+  foreach( I IN LISTS OPTS_TARGET )
+    string( TOUPPER "${OPTS_OS}_${I}" VAR_NAME )
     message( STATUS " - ${I}: \t ${VAR_NAME}" )
     list( APPEND PLATFORM_LIST ${VAR_NAME} )
-    set( ${VAR_NAME} "${I}" PARENT_SCOPE ) # store <api> in <OS>_<API> for the find sources script
-  endforeach( I IN LISTS TARGET )
+    set( ${VAR_NAME} "${I}" PARENT_SCOPE ) # store <api> in <OPTS_OS>_<API> for the find sources script
+  endforeach( I IN LISTS OPTS_TARGET )
 
   # Set default target
-  if( ${OS} )
+  if( ${OPTS_OS} )
     if( NOT PLATFORM_TARGET )
-      list( GET TARGET 0 TEMP )
-      string( TOUPPER "${OS}_${TEMP}" VAR_NAME )
+      list( GET OPTS_TARGET 0 TEMP )
+      string( TOUPPER "${OPTS_OS}_${TEMP}" VAR_NAME )
       set( PLATFORM_TARGET ${VAR_NAME} PARENT_SCOPE )
     endif( NOT PLATFORM_TARGET )
-  endif( ${OS} )
+  endif( ${OPTS_OS} )
 
   # Export to parent scope
   list( APPEND ${PROJECT_NAME}_PLATFORM_LIST "${PLATFORM_LIST}" )
