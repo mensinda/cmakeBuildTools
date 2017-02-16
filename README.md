@@ -24,6 +24,7 @@ MIN_VERSION: the min. compiler version
     PATH           <path to generate files in>
     CLASS_NAME     <name of the class (file names will be PATH/CLASS_NAME.{hpp,cpp})>
     FUNC_NAME      <the name of the function>
+    INDENT_STR     <a string used for one level of indentation>
     INCLUDES       <files to include (where the enums are)>
     NAMESPACE      <namespace to use>
     ENUMS          <list of enums to generate>

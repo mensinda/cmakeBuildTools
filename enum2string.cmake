@@ -28,6 +28,7 @@
 #    PATH           <path to generate files in>
 #    CLASS_NAME     <name of the class (file names will be PATH/CLASS_NAME.{hpp,cpp})>
 #    FUNC_NAME      <the name of the function>
+#    INDENT_STR     <a string used for one level of indentation>
 #    INCLUDES       <files to include (where the enums are)>
 #    NAMESPACE      <namespace to use>
 #    ENUMS          <list of enums to generate>
@@ -36,7 +37,7 @@
 #    USE_C_STRINGS  <whether to use c strings instead of std::string or not (default: off)>
 function( enum2str_generate )
   set( options        USE_CONSTEXPR USE_C_STRINGS)
-  set( oneValueArgs   PATH CLASS_NAME FUNC_NAME NAMESPACE )
+  set( oneValueArgs   PATH CLASS_NAME FUNC_NAME NAMESPACE INDENT_STR )
   set( multiValueArgs INCLUDES ENUMS BLACKLIST )
   cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
@@ -47,6 +48,12 @@ function( enum2str_generate )
   endif( OPTS_USE_C_STRINGS )
 
   message( STATUS "Generating enum2str files" )
+
+  if( "${OPTS_INDENT_STR}" STREQUAL "" )
+    set( IND "  " )
+  else( "${OPTS_INDENT_STR}" STREQUAL "" )
+    set( IND "${OPTS_INDENT_STR}" )
+  endif( "${OPTS_INDENT_STR}" STREQUAL "" )
 
   __enum2str_checkSet( OPTS_PATH )
   __enum2str_checkSet( OPTS_CLASS_NAME )
@@ -91,14 +98,20 @@ function( enum2str_generate )
 
   set( CONSTANSTS 0 )
 
+  # Remove comments
+  string( REGEX REPLACE "//[^\n]*"                "" RAW_DATA "${RAW_DATA}" )
+  string( REGEX REPLACE "/\\*([^*]|\\*[^/])*\\*/" "" RAW_DATA "${RAW_DATA}" )
+
   foreach( I IN LISTS OPTS_ENUMS )
     set( ENUM_NS "" )
+    # Generate the name of the enum
     string( REGEX REPLACE ".*::" "" ENUM_NAME "${I}" )
     if( "${I}" MATCHES "(.*)::[^:]+" )
       string( REGEX REPLACE "(.*)::[^:]+" "\\1::" ENUM_NS "${I}" )
     endif( "${I}" MATCHES "(.*)::[^:]+" )
 
-    string( REGEX MATCH "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?{[^}]*}" P1 "${RAW_DATA}" )
+    # Extract only the enum
+    string( REGEX MATCH "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?{[^}]*}" P1 "${RAW_DATA}" )
     if( "${P1}" STREQUAL "" )
       string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${RAW_DATA}" )
 
@@ -107,12 +120,18 @@ function( enum2str_generate )
         continue()
       endif( "${P1}" STREQUAL "" )
     endif( "${P1}" STREQUAL "" )
-    string( REGEX REPLACE "//[^\n]*" "" P1 "${P1}" )
-    string( REGEX REPLACE "/\\*([^*]|\\*[^/])*\\*/" "" P1 "${P1}" )
-    string( REGEX REPLACE "enum[ \t\n]+${ENUM_NAME}[ \t\n]+(:[^{]+)?" "" P1 "${P1}" )
-    string( REGEX REPLACE "enum[ \t\n]{" "" P1 "${P1}" )
-    string( REGEX REPLACE "}[ \t\n]*${ENUM_NAME}[ \t\n]*;" "" P1 "${P1}" )
-    string( REGEX REPLACE "[ \t\n{};]" "" P1 "${P1}" )
+
+    # Check if the enum is scoped
+    string( REGEX MATCH "^enum[ \t\n]+(struct|class)" IS_SCOPED "${P1}" )
+    if( NOT IS_SCOPED STREQUAL "" )
+      string( APPEND ENUM_NS "${ENUM_NAME}::" )
+    endif( NOT IS_SCOPED STREQUAL "" )
+
+    # Convert the eunmeration to a list
+    string( REGEX REPLACE "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?" "" P1 "${P1}" )
+    string( REGEX REPLACE "enum[ \t\n]*{"                                                      "" P1 "${P1}" )
+    string( REGEX REPLACE "}[ \t\n]*${ENUM_NAME}[ \t\n]*;"                                     "" P1 "${P1}" )
+    string( REGEX REPLACE "[ \t\n{};]"                                                         "" P1 "${P1}" )
     string( REGEX REPLACE ",$" "" P1 "${P1}" ) # Remove trailing ,
     string( REGEX REPLACE "," ";" L1 "${P1}" ) # Make a List
 
@@ -170,34 +189,73 @@ macro( __enum2str_checkSet )
 endmacro( __enum2str_checkSet )
 
 function( enum2str_add )
+  set( MAX_LENGTH 0 )
+
+  foreach( I IN LISTS ENUMS_TO_USE )
+    string( LENGTH "${I}" LEN )
+    if( LEN GREATER MAX_LENGTH )
+      set( MAX_LENGTH ${LEN} )
+    endif( LEN GREATER MAX_LENGTH )
+  endforeach( I IN LISTS ENUMS_TO_USE )
+
   if( OPTS_USE_CONSTEXPR )
-    file( APPEND "${HPP_FILE}" "   /*!\n    * \\brief Converts the enum ${ARGV0} to a c string\n" )
-    file( APPEND "${HPP_FILE}" "    * \\param _var The enum value to convert\n" )
-    file( APPEND "${HPP_FILE}" "    * \\returns _var converted to a c string\n    */\n" )
-    file( APPEND "${HPP_FILE}" "   static constexpr const char *${OPTS_FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
-    file( APPEND "${HPP_FILE}" "      switch ( _var ) {\n" )
+    file( APPEND "${HPP_FILE}" "${IND}/*!\n    * \\brief Converts the enum ${ARGV0} to a c string\n" )
+    file( APPEND "${HPP_FILE}" "${IND} * \\param _var The enum value to convert\n" )
+    file( APPEND "${HPP_FILE}" "${IND} * \\returns _var converted to a c string\n    */\n" )
+    file( APPEND "${HPP_FILE}" "${IND}static constexpr const char *${OPTS_FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
+    file( APPEND "${HPP_FILE}" "${IND}${IND}switch ( _var ) {\n" )
 
     foreach( I IN LISTS ENUMS_TO_USE )
-      file( APPEND "${HPP_FILE}" "         case ${ENUM_NS}${I}: return \"${I}\";\n" )
+      set( PADDING )
+      string( LENGTH "${I}" LEN )
+      math( EXPR TO_PAD "${MAX_LENGTH} - ${LEN}" )
+      foreach( J RANGE ${TO_PAD} )
+        string( APPEND PADDING " " )
+      endforeach( J RANGE ${TO_PAD} )
+
+      file( APPEND "${HPP_FILE}" "${IND}${IND}${IND}case ${ENUM_NS}${I}:${PADDING}return \"${I}\";\n" )
     endforeach( I IN LISTS ENUMS_TO_USE )
 
-    file( APPEND "${HPP_FILE}" "         default: return \"<UNKNOWN>\";\n" )
-    file( APPEND "${HPP_FILE}" "      }\n   }\n\n" )
+    set( PADDING )
+    string( LENGTH "default"         LEN )
+    string( LENGTH "case ${ENUM_NS}" LEN2 )
+    math( EXPR TO_PAD "(${MAX_LENGTH} + ${LEN2}) - ${LEN}" )
+    foreach( J RANGE ${TO_PAD} )
+      string( APPEND PADDING " " )
+    endforeach( J RANGE ${TO_PAD} )
+
+    file( APPEND "${HPP_FILE}" "${IND}${IND}${IND}default:${PADDING}return \"<UNKNOWN>\";\n" )
+    file( APPEND "${HPP_FILE}" "${IND}${IND}}\n${IND}}\n\n" )
   else( OPTS_USE_CONSTEXPR )
-    file( APPEND "${HPP_FILE}" "   static ${STRING_TYPE}${OPTS_FUNC_NAME}( ${ARGV0} _var ) noexcept;\n" )
+    file( APPEND "${HPP_FILE}" "${IND}static ${STRING_TYPE}${OPTS_FUNC_NAME}( ${ARGV0} _var ) noexcept;\n" )
 
     file( APPEND "${CPP_FILE}" "/*!\n * \\brief Converts the enum ${ARGV0} to a ${STRING_TYPE}\n" )
     file( APPEND "${CPP_FILE}" " * \\param _var The enum value to convert\n" )
     file( APPEND "${CPP_FILE}" " * \\returns _var converted to a ${STRING_TYPE}\n */\n" )
     file( APPEND "${CPP_FILE}" "${STRING_TYPE}${OPTS_CLASS_NAME}::${OPTS_FUNC_NAME}( ${ARGV0} _var ) noexcept {\n" )
-    file( APPEND "${CPP_FILE}" "   switch ( _var ) {\n" )
+    file( APPEND "${CPP_FILE}" "${IND}switch ( _var ) {\n" )
 
     foreach( I IN LISTS ENUMS_TO_USE )
-        file( APPEND "${CPP_FILE}" "      case ${ENUM_NS}${I}: return \"${I}\";\n" )
+      set( PADDING )
+      string( LENGTH "${I}" LEN )
+      math( EXPR TO_PAD "${MAX_LENGTH} - ${LEN}" )
+      foreach( J RANGE ${TO_PAD} )
+        string( APPEND PADDING " " )
+      endforeach( J RANGE ${TO_PAD} )
+
+      file( APPEND "${CPP_FILE}" "${IND}${IND}case ${ENUM_NS}${I}:${PADDING}return \"${I}\";\n" )
     endforeach( I IN LISTS ENUMS_TO_USE )
 
-    file( APPEND "${CPP_FILE}" "      default: return \"<UNKNOWN>\";\n" )
-    file( APPEND "${CPP_FILE}" "   }\n}\n\n" )
+    set( PADDING )
+    string( LENGTH "default"         LEN )
+    string( LENGTH "case ${ENUM_NS}" LEN2 )
+    math( EXPR TO_PAD "(${MAX_LENGTH} + ${LEN2}) - ${LEN}" )
+    foreach( J RANGE ${TO_PAD} )
+      string( APPEND PADDING " " )
+    endforeach( J RANGE ${TO_PAD} )
+
+    file( APPEND "${CPP_FILE}" "${IND}${IND}default:${PADDING}return \"<UNKNOWN>\";\n" )
+    file( APPEND "${CPP_FILE}" "${IND}}\n}\n\n" )
    endif( OPTS_USE_CONSTEXPR )
 endfunction( enum2str_add )
 
@@ -209,7 +267,7 @@ function( enum2str_init )
   file( APPEND "${HPP_FILE}" "  * \\file ${OPTS_CLASS_NAME}.hpp\n" )
   file( APPEND "${HPP_FILE}" "  * \\warning This is an automatically generated file!\n" )
   file( APPEND "${HPP_FILE}" "  */\n\n" )
-  file( APPEND "${HPP_FILE}" "#pragma once\n\n" )
+  file( APPEND "${HPP_FILE}" "#pragma once\n\n// clang-format off\n\n" )
   file( APPEND "${HPP_FILE}" "#include <string>\n" )
 
   foreach( I IN LISTS OPTS_INCLUDES )
@@ -227,7 +285,7 @@ function( enum2str_init )
     file( APPEND "${CPP_FILE}" "  */\n\n" )
     file( APPEND "${CPP_FILE}" "#pragma clang diagnostic push\n" )
     file( APPEND "${CPP_FILE}" "#pragma clang diagnostic ignored \"-Wcovered-switch-default\"\n\n" )
-    file( APPEND "${CPP_FILE}" "#include \"${OPTS_CLASS_NAME}.hpp\"\n\n" )
+    file( APPEND "${CPP_FILE}" "#include \"${OPTS_CLASS_NAME}.hpp\"\n\n// clang-format off\n\n" )
     file( APPEND "${CPP_FILE}" "namespace ${OPTS_NAMESPACE} {\n\n" )
   endif( NOT OPTS_USE_CONSTEXPR )
 endfunction( enum2str_init )
@@ -236,10 +294,10 @@ endfunction( enum2str_init )
 function( enum2str_end )
   string( TOUPPER ${OPTS_CLASS_NAME} OPTS_CLASS_NAME_UPPERCASE )
 
-  file( APPEND "${HPP_FILE}" "};\n\n}\n\n" )
+  file( APPEND "${HPP_FILE}" "};\n\n}\n\n// clang-format on\n" )
   if( NOT OPTS_USE_CONSTEXPR )
     file( APPEND "${CPP_FILE}" "\n}\n" )
-    file( APPEND "${CPP_FILE}" "#pragma clang diagnostic pop\n" )
+    file( APPEND "${CPP_FILE}" "// clang-format on\n\n#pragma clang diagnostic pop\n" )
   endif( NOT OPTS_USE_CONSTEXPR )
 
 endfunction( enum2str_end )
