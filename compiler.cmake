@@ -57,7 +57,7 @@ function( add_compiler COMPILER )
   endif( DEFINED OPTS_MIN_VERSION )
 
   if( ENABLE_SANITIZERS )
-    set( DEBUG "${DEBUG};${OPTS_SANITIZE}" )
+    set( OPTS_DEBUG "${OPTS_DEBUG};${OPTS_SANITIZE}" )
     message( STATUS "Using sanitizer(s) ${OPTS_SANITIZE} (change with -DENABLE_SANITIZERS)" )
   else( ENABLE_SANITIZERS )
     message( STATUS "Use no sanitizer(s) (change with -DENABLE_SANITIZERS)" )
