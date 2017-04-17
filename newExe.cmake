@@ -69,7 +69,7 @@ function( new_project_executable )
   endforeach()
   string( STRIP "${CM_CURRENT_EXE_DEP}" CM_CURRENT_EXE_DEP )
 
-  message( STATUS "Executable ${CM_CURRENT_EXE_LC}: (depends on: ${CM_CURRENT_EXE_DEP})" )
+  message( STATUS "Adding Executable ${CM_CURRENT_EXE_LC}:" )
 
   if( EXISTS ${OPTS_PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )

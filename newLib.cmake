@@ -72,7 +72,7 @@ function( new_project_library )
   endforeach()
   string( STRIP "${CM_CURRENT_LIB_DEP}" CM_CURRENT_LIB_DEP )
 
-  message( STATUS "Library ${CM_CURRENT_LIB_LC}: (depends on: ${CM_CURRENT_LIB_DEP})" )
+  message( STATUS "Adding Library ${CM_CURRENT_LIB_LC}:" )
 
   if( EXISTS ${OPTS_PATH}/CMakeScript.cmake )
     message( STATUS "  - Found CMakeScript.cmake" )

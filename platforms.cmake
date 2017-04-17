@@ -39,15 +39,13 @@ function( add_platform )
   set( multiValueArgs TARGET  )
   cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-  foreach( I IN LISTS TARGET_LIST )
-    if( "${${I}}" STREQUAL "" )
-      message( ERROR "Invalid use of add_platform: Section ${I} not defined!" )
-    endif( "${${I}}" STREQUAL "" )
-  endforeach( I IN LISTS TARGET_LIST )
+  if( "${OPTS_OS}" STREQUAL "" )
+    set( OPTS_OS "ALL" )
+  endif( "${OPTS_OS}" STREQUAL "" )
 
-  if( ${OPTS_OS} )
+  if( ${OPTS_OS} OR "${OPTS_OS}" STREQUAL "ALL" )
     set( CURRENT_OS_STRING " (current)" )
-  endif( ${OPTS_OS} )
+  endif( ${OPTS_OS} OR "${OPTS_OS}" STREQUAL "ALL" )
 
   # Generate the platform list
   message( STATUS "Adding platform support for ${OPTS_OS}${CURRENT_OS_STRING}. Supported targets are:" )
@@ -74,21 +72,21 @@ endfunction( add_platform )
 
 
 function( check_platform )
-  set( FOUND_PLATFORM_TARGET OFF )
+  message( "" )
+  message( STATUS "Checking enabled platforms / targets (change with -DPLATFORM_TARGET):" )
 
   foreach( I IN LISTS ${PROJECT_NAME}_PLATFORM_LIST )
     set( CM_${I} 0 PARENT_SCOPE )
-
-    if( I IN_LIST PLATFORM_TARGET )
-      set( FOUND_PLATFORM_TARGET ON )
-      set( CM_${I} 1 PARENT_SCOPE )
-      message( STATUS "Using target ${I} (change with -DPLATFORM_TARGET)" )
-    endif( I IN_LIST PLATFORM_TARGET )
-
   endforeach( I IN LISTS ${PROJECT_NAME}_PLATFORM_LIST )
 
-  if( NOT FOUND_PLATFORM_TARGET )
-    message( FATAL_ERROR "Unknown target ${PLATFORM_TARGET}" )
-  endif( NOT FOUND_PLATFORM_TARGET )
+  foreach( I IN LISTS PLATFORM_TARGET )
+    if( I IN_LIST ${PROJECT_NAME}_PLATFORM_LIST )
+      set( CM_${I} 1 PARENT_SCOPE )
+      message( STATUS " - Using target ${I}" )
+    else( I IN_LIST ${PROJECT_NAME}_PLATFORM_LIST )
+      message( FATAL_ERROR " - Unknown target ${I}" )
+    endif( I IN_LIST ${PROJECT_NAME}_PLATFORM_LIST )
+  endforeach( I IN LISTS PLATFORM_TARGET )
+
   message( "" )
 endfunction( check_platform )
