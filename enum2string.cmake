@@ -103,17 +103,27 @@ function( enum2str_generate )
   string( REGEX REPLACE "/\\*([^*]|\\*[^/])*\\*/" "" RAW_DATA "${RAW_DATA}" )
 
   foreach( I IN LISTS OPTS_ENUMS )
-    set( ENUM_NS "" )
+    set( ENUM_NS    "" )
+    set( ENUM_SCOPE "" )
+
     # Generate the name of the enum
     string( REGEX REPLACE ".*::" "" ENUM_NAME "${I}" )
     if( "${I}" MATCHES "(.*)::[^:]+" )
-      string( REGEX REPLACE "(.*)::[^:]+" "\\1::" ENUM_NS "${I}" )
+      string( REGEX REPLACE "(.*)::[^:]+" "\\1::" ENUM_NS    "${I}" )
+      string( REGEX REPLACE "::$"         ""      ENUM_SCOPE "${ENUM_NS}" )
+      string( REGEX REPLACE "^[^:]+::"    ""      ENUM_SCOPE "${ENUM_SCOPE}" )
     endif( "${I}" MATCHES "(.*)::[^:]+" )
 
+    if( NOT ENUM_SCOPE STREQUAL "" )
+      string( REGEX MATCH "(struct|class|namespace)[ \t\n]+${ENUM_SCOPE}[^;:]*(:[^{;]+)?[ \t\n]*{.*" P1 "${RAW_DATA}" )
+    else( NOT ENUM_SCOPE STREQUAL "" )
+      set( P1 "${RAW_DATA}" )
+    endif( NOT ENUM_SCOPE STREQUAL "" )
+
     # Extract only the enum
-    string( REGEX MATCH "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?{[^}]*}" P1 "${RAW_DATA}" )
+    string( REGEX MATCH "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?{[^}]*}" P1 "${P1}" )
     if( "${P1}" STREQUAL "" )
-      string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${RAW_DATA}" )
+      string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${P1}" )
 
       if( "${P1}" STREQUAL "" )
         message( WARNING "enum '${I}' not found!" )
