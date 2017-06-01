@@ -115,15 +115,15 @@ function( enum2str_generate )
     endif( "${I}" MATCHES "(.*)::[^:]+" )
 
     if( NOT ENUM_SCOPE STREQUAL "" )
-      string( REGEX MATCH "(struct|class|namespace)[ \t\n]+${ENUM_SCOPE}[^;:]*(:[^{;]+)?[ \t\n]*{.*" P1 "${RAW_DATA}" )
+      string( REGEX MATCH "(struct|class|namespace)[ \t\n]+${ENUM_SCOPE}[^;:]*(:[^{;]+)?[ \t\n]*{.*" P0 "${RAW_DATA}" )
     else( NOT ENUM_SCOPE STREQUAL "" )
-      set( P1 "${RAW_DATA}" )
+      set( P0 "${RAW_DATA}" )
     endif( NOT ENUM_SCOPE STREQUAL "" )
 
     # Extract only the enum
-    string( REGEX MATCH "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?{[^}]*}" P1 "${P1}" )
+    string( REGEX MATCH "enum[ \t\n]+((struct|class)[ \t\n]+)?${ENUM_NAME}[ \t\n]*(:[^{]+)?{[^}]*}" P1 "${P0}" )
     if( "${P1}" STREQUAL "" )
-      string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${P1}" )
+      string( REGEX MATCH "enum[ \t\n]+{[^}]*}[ \t\n]+${ENUM_NAME};" P1 "${P0}" )
 
       if( "${P1}" STREQUAL "" )
         message( WARNING "enum '${I}' not found!" )

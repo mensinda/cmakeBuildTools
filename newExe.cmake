@@ -88,7 +88,26 @@ function( new_project_executable )
 
   list( APPEND ${PROJECT_NAME}_SUBDIR_LIST "${OPTS_PATH}" )
 
-  configure_file( "${OPTS_TEMPLATE}" "${OPTS_PATH}/CMakeLists.txt" @ONLY )
+  configure_file( "${OPTS_TEMPLATE}" "${CMAKE_BINARY_DIR}/CMakeLists.txt" @ONLY )
+
+  configure_file( "${OPTS_TEMPLATE}" "${CMAKE_BINARY_DIR}/CMakeLists.txt" @ONLY )
+
+  set( DO_COPY ON )
+  if( EXISTS "${OPTS_PATH}/CMakeLists.txt" )
+    file( READ "${OPTS_PATH}/CMakeLists.txt"         RAW_OLD_FILE )
+    file( READ "${CMAKE_BINARY_DIR}/CMakeLists.txt"  RAW_NEW_FILE )
+    string( SHA256 HASH1 "${RAW_OLD_FILE}" )
+    string( SHA256 HASH2 "${RAW_NEW_FILE}" )
+    if( HASH1 STREQUAL HASH2 )
+      set( DO_COPY OFF )
+    endif( HASH1 STREQUAL HASH2 )
+  endif( EXISTS "${OPTS_PATH}/CMakeLists.txt" )
+
+  if( DO_COPY )
+    message( STATUS "GEN ${OPTS_PATH}/CMakeLists.txt" )
+    file( COPY "${CMAKE_BINARY_DIR}/CMakeLists.txt" DESTINATION ${OPTS_PATH}  )
+  endif( DO_COPY )
+
   set( ${PROJECT_NAME}_EXE_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_EXE_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )
   set( ${PROJECT_NAME}_SUBDIR_LIST             "${${PROJECT_NAME}_SUBDIR_LIST}"              PARENT_SCOPE )
 endfunction( new_project_executable )
