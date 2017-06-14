@@ -104,7 +104,6 @@ function( new_project_executable )
   endif( EXISTS "${OPTS_PATH}/CMakeLists.txt" )
 
   if( DO_COPY )
-    message( STATUS "GEN ${OPTS_PATH}/CMakeLists.txt" )
     file( COPY "${CMAKE_BINARY_DIR}/CMakeLists.txt" DESTINATION ${OPTS_PATH}  )
   endif( DO_COPY )
 
