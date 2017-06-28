@@ -110,14 +110,14 @@ endfunction( find_source_files )
 
 
 macro( export_helper_append_and_sort LIST_ALL TO_APPEND ROOT_DIR )
-  if( DEFINED ${TO_APPEND} )
+  if( DEFINED ${TO_APPEND} AND DEFINED ${LIST_ALL} )
     list( SORT ${TO_APPEND} )
     foreach( I IN LISTS ${TO_APPEND} )
       list( APPEND ${LIST_ALL} "${ROOT_DIR}/${I}" )
     endforeach( I IN LISTS ${TO_APPEND} )
     list( SORT ${LIST_ALL} )
     set( ${LIST_ALL} "${${LIST_ALL}}" PARENT_SCOPE )
-  endif( DEFINED ${TO_APPEND} )
+  endif( DEFINED ${TO_APPEND} AND DEFINED ${LIST_ALL} )
 endmacro( export_helper_append_and_sort )
 
 # Exports all lists from find_source_files with an additional ALL prefix
