@@ -49,9 +49,26 @@ function( add_platform )
 
   # Generate the platform list
   message( STATUS "Adding platform support for ${OPTS_OS}${CURRENT_OS_STRING}. Supported targets are:" )
+
+  # Calculate filler whitespaces
+  set( MAX_LENGTH 0 )
   foreach( I IN LISTS OPTS_TARGET )
+    string( LENGTH "${I}" CUR_LENGTH )
+    if( CUR_LENGTH GREATER MAX_LENGTH )
+      set( MAX_LENGTH ${CUR_LENGTH} )
+    endif( CUR_LENGTH GREATER MAX_LENGTH )
+  endforeach( I IN LISTS OPTS_TARGET )
+
+  foreach( I IN LISTS OPTS_TARGET )
+    string( LENGTH "${I}" CUR_LENGTH )
+    set( SPACES "" )
+    math( EXPR NSPACES "${MAX_LENGTH} - ${CUR_LENGTH}" )
+    foreach( J RANGE 0 ${NSPACES} )
+      string( APPEND SPACES " " )
+    endforeach( J RANGE 0 ${NSPACES} )
+
     string( TOUPPER "${OPTS_OS}_${I}" VAR_NAME )
-    message( STATUS " - ${I}: \t ${VAR_NAME}" )
+    message( STATUS " - ${I}: ${SPACES} ${VAR_NAME}" )
     list( APPEND PLATFORM_LIST ${VAR_NAME} )
     set( ${VAR_NAME} "${I}" PARENT_SCOPE ) # store <api> in <OPTS_OS>_<API> for the find sources script
   endforeach( I IN LISTS OPTS_TARGET )
