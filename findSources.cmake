@@ -36,7 +36,7 @@ macro( find_helper_asign_and_export FILE_LIST PLT_LIST SUFFIX )
     set( MATCH_FOUND OFF )
 
     foreach( J IN LISTS ${PLT_LIST} )
-      string( REGEX MATCH "^${${J}}/" REG_OUT "${I}" )
+      string( REGEX MATCH "^([^/]+/)*${${J}}/" REG_OUT "${I}" )
 
       if( NOT "${REG_OUT}" STREQUAL "" )
         list( APPEND SRC_${J}_${SUFFIX} "${I}" )
