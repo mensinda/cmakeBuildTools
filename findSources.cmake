@@ -66,6 +66,7 @@ endmacro( find_helper_asign_and_export )
 #    PATH    <root search path>
 #    EXT_CPP <cpp file extensions (without the first '.')>
 #    EXT_HPP <hpp file extensions (without the first '.')>
+#    EXCLUDE <list of regex to exclude (optional)>
 #
 # Searches the a directory recursively for source files
 # ALL sections must be set!
@@ -77,13 +78,13 @@ endmacro( find_helper_asign_and_export )
 function( find_source_files )
   set( options )
   set( oneValueArgs   PATH )
-  set( multiValueArgs EXT_CPP EXT_HPP  )
+  set( multiValueArgs EXT_CPP EXT_HPP EXCLUDE )
   cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
   foreach( I IN LISTS oneValueArgs multiValueArgs )
-    if( "${OPTS_${I}}" STREQUAL "" )
+    if( "${OPTS_${I}}" STREQUAL "" AND NOT "${I}" STREQUAL "EXCLUDE" )
       message( ERROR "Invalid use of find_source_files: Section ${I} not defined!" )
-    endif( "${OPTS_${I}}" STREQUAL "" )
+    endif( "${OPTS_${I}}" STREQUAL "" AND NOT "${I}" STREQUAL "EXCLUDE" )
   endforeach( I IN LISTS TARGET_LIST )
 
   foreach( I IN ITEMS CPP HPP )
@@ -94,6 +95,9 @@ function( find_source_files )
       if( TEMP_LIST STREQUAL "" )
         continue()
       endif( TEMP_LIST STREQUAL "" )
+      foreach( K IN LISTS OPTS_EXCLUDE )
+        list( FILTER TEMP_LIST EXCLUDE REGEX "${K}" )
+      endforeach( K IN LISTS OPTS_EXCLUDE )
       list( APPEND ${I}_LIST_RAW "${TEMP_LIST}" )
     endforeach( J IN LISTS OPTS_EXT_${I} )
   endforeach()

@@ -32,6 +32,9 @@
 #    PATH         <path to the source dir>
 #    TEMPLATE     <path to the CMake template file>
 #    DEPENDENCIES <dependencies (optional)>
+#    EXCLUDE      <list of regex to exclude (optional)>
+#    EXT_CPP      <list of valid c++ extensions (optinal [default: cpp;cxx;C;c])
+#    EXT_HPP      <list of valid c++ extensions (optinal [default: hpp;hxx;H;h])
 #
 # Variables available in the template:
 #    CM_CURRENT_SRC_CPP
@@ -49,11 +52,9 @@
 #    ${PROJECT_NAME}_ALL_SRC_${I}_<H,C>PP     <List of source files for platform target ${I} (has a CPP and HPP version)>
 #    ${PROJECT_NAME}_ALL_SRC_ALL_<H,C>PP      <List of source files for all platform targets (has a CPP and HPP version)>
 function( new_project_library )
-  set( DEPENDENCIES "" )
-
   set( options )
   set( oneValueArgs   NAME PATH TEMPLATE )
-  set( multiValueArgs DEPENDENCIES )
+  set( multiValueArgs DEPENDENCIES EXCLUDE EXT_CPP EXT_HPP )
   cmake_parse_arguments( OPTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
   set( CM_CURRENT_LIB_LC  ${OPTS_NAME} )
@@ -67,6 +68,14 @@ function( new_project_library )
     endif( "${OPTS_${I}}" STREQUAL "" )
   endforeach( I IN LISTS oneValueArgs )
 
+  if( "${OPTS_EXT_CPP}" STREQUAL "" )
+    set( OPTS_EXT_CPP "cpp" "cxx" "C" "c" )
+  endif( "${OPTS_EXT_CPP}" STREQUAL "" )
+
+  if( "${OPTS_EXT_HPP}" STREQUAL "" )
+    set( OPTS_EXT_HPP "hpp" "hxx" "H" "h" )
+  endif( "${OPTS_EXT_HPP}" STREQUAL "" )
+
   foreach( I IN LISTS OPTS_DEPENDENCIES )
     string( APPEND CM_CURRENT_LIB_DEP "${I} " )
   endforeach()
@@ -79,7 +88,7 @@ function( new_project_library )
     include( ${OPTS_PATH}/CMakeScript.cmake )
   endif( EXISTS ${OPTS_PATH}/CMakeScript.cmake  )
 
-  find_source_files(  PATH ${OPTS_PATH} EXT_CPP "cpp" "cxx" "C" "c" EXT_HPP "hpp" "hxx" "H" "h" )
+  find_source_files(  PATH ${OPTS_PATH} EXT_CPP ${OPTS_EXT_CPP} EXT_HPP ${OPTS_EXT_HPP} EXCLUDE ${OPTS_EXCLUDE} )
   export_found_files( ${OPTS_PATH} )
 
   select_sources() # Sets CM_CURRENT_SRC_CPP and CM_CURRENT_SRC_HPP and CURRENT_INCLUDE_DIRS

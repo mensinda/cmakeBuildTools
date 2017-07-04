@@ -43,6 +43,7 @@ Usage:
     PATH    <root search path>
     EXT_CPP <cpp file extensions (without the first '.')>
     EXT_HPP <hpp file extensions (without the first '.')>
+    EXCLUDE <list of regex to exclude (optional)>
 
 Generated variables:
   ${PROJECT_NAME}_UNASIGNED_{C,H}PP  # All source files
@@ -58,7 +59,8 @@ Exports all lists from find_source_files with an additional ALL prefix
 
 # function `add_platform(...)`
 
-Adds a operating system with (multiple) graphic API's
+Adds a operating system with (multiple) targets. Each target can be enabled and disabled. Only enabled targets will be
+found by find_source_files (= folders with the same name as disabled targets will be excluded).
 
 ```
 Usage:
@@ -75,6 +77,8 @@ Usage:
 
 Checks the the `PLATFORM_TARGET` list. Also generates a `CM_${I}` variable (= 0/1) for every target of
 each platform / OS.
+
+This function must be run to finalize the platform setup.
 
 # function `select_sources()`
 
@@ -111,6 +115,9 @@ new_project_library
    PATH         <path to the source dir>
    TEMPLATE     <path to the CMake template file>
    DEPENDENCIES <dependencies (optional)>
+   EXCLUDE      <list of regex to exclude (optional)>
+   EXT_CPP      <list of valid c++ extensions (optinal [default: cpp;cxx;C;c])
+   EXT_HPP      <list of valid c++ extensions (optinal [default: hpp;hxx;H;h])
 
 Variables available in the template:
    CM_CURRENT_SRC_CPP
@@ -141,6 +148,9 @@ new_project_executable
    PATH         <path to the source dir>
    TEMPLATE     <path to the CMake template file>
    DEPENDENCIES <dependencies (optional)>
+   EXCLUDE      <list of regex to exclude (optional)>
+   EXT_CPP      <list of valid c++ extensions (optinal [default: cpp;cxx;C;c])
+   EXT_HPP      <list of valid c++ extensions (optinal [default: hpp;hxx;H;h])
 
 Variables available in the template:
    CM_CURRENT_SRC_CPP
