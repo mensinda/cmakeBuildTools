@@ -117,6 +117,10 @@ function( new_project_library )
     file( COPY "${CMAKE_BINARY_DIR}/CMakeLists.txt" DESTINATION ${OPTS_PATH}  )
   endif( DO_COPY )
 
+  if( EXISTS "${CMAKE_BINARY_DIR}/CMakeLists.txt" )
+    file( REMOVE "${CMAKE_BINARY_DIR}/CMakeLists.txt"  )
+  endif( EXISTS "${CMAKE_BINARY_DIR}/CMakeLists.txt" )
+
   set( ${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_LIB_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )
   set( ${PROJECT_NAME}_SUBDIR_LIST             "${${PROJECT_NAME}_SUBDIR_LIST}"              PARENT_SCOPE )
 endfunction( new_project_library )

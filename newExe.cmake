@@ -101,8 +101,6 @@ function( new_project_executable )
 
   configure_file( "${OPTS_TEMPLATE}" "${CMAKE_BINARY_DIR}/CMakeLists.txt" @ONLY )
 
-  configure_file( "${OPTS_TEMPLATE}" "${CMAKE_BINARY_DIR}/CMakeLists.txt" @ONLY )
-
   set( DO_COPY ON )
   if( EXISTS "${OPTS_PATH}/CMakeLists.txt" )
     file( READ "${OPTS_PATH}/CMakeLists.txt"         RAW_OLD_FILE )
@@ -117,6 +115,10 @@ function( new_project_executable )
   if( DO_COPY )
     file( COPY "${CMAKE_BINARY_DIR}/CMakeLists.txt" DESTINATION ${OPTS_PATH}  )
   endif( DO_COPY )
+
+  if( EXISTS "${CMAKE_BINARY_DIR}/CMakeLists.txt" )
+    file( REMOVE "${CMAKE_BINARY_DIR}/CMakeLists.txt"  )
+  endif( EXISTS "${CMAKE_BINARY_DIR}/CMakeLists.txt" )
 
   set( ${PROJECT_NAME}_EXE_INCLUDE_DIRECTORIES "${${PROJECT_NAME}_EXE_INCLUDE_DIRECTORIES}"  PARENT_SCOPE )
   set( ${PROJECT_NAME}_SUBDIR_LIST             "${${PROJECT_NAME}_SUBDIR_LIST}"              PARENT_SCOPE )
