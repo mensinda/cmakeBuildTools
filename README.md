@@ -18,19 +18,28 @@ MIN_VERSION: the min. compiler version
 ```
 
 # function `enum2str_generate( ... )`
+
+Searches for enum definitions in include files and parses them. The parsed information is then used
+to generate C++ files to convert enum vaules to a string.
+
+Generating functions to resolve bitfield emums is also supported via `ENABLE_BITFIELDS`
+
  Usage:
 ```
  enum2str_generate
-    PATH           <path to generate files in>
-    CLASS_NAME     <name of the class (file names will be PATH/CLASS_NAME.{hpp,cpp})>
-    FUNC_NAME      <the name of the function>
-    INDENT_STR     <a string used for one level of indentation>
-    INCLUDES       <files to include (where the enums are)>
-    NAMESPACE      <namespace to use>
-    ENUMS          <list of enums to generate>
-    BLACKLIST      <blacklist for enum constants>
-    USE_CONSTEXPR  <whether to use constexpr or not (default: off)>
-    USE_C_STRINGS  <whether to use c strings instead of std::string or not (default: off)>
+    PATH             <path to generate files in>
+    CLASS_NAME       <name of the class (file names will be PATH/CLASS_NAME.{hpp,cpp})>
+    FUNC_NAME        <the name of the function>
+    BITFIELD_TYPE    <integer type of the bitfields (e.g. uint64_t)>
+    CONCATINATE_STR  <string used to concatinate bitfield strings>
+    INDENT_STR       <a string used for one level of indentation>
+    INCLUDES         <files to include (where the enums are)>
+    NAMESPACE        <namespace to use>
+    ENUMS            <list of enums to generate>
+    BLACKLIST        <blacklist for enum constants>
+    USE_CONSTEXPR    <whether to use constexpr or not (default: off)>
+    USE_C_STRINGS    <whether to use c strings instead of std::string or not (default: off)>
+    ENABLE_BITFIELDS <enables the generation of bit field functions>
 ```
 
 # function `find_source_files(...)`
