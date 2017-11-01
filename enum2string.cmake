@@ -106,9 +106,10 @@ function( enum2str_generate )
 
   set( CONSTANSTS 0 )
 
-  # Remove comments
+  # Remove comments and macros
   string( REGEX REPLACE "//[^\n]*"                "" RAW_DATA "${RAW_DATA}" )
   string( REGEX REPLACE "/\\*([^*]|\\*[^/])*\\*/" "" RAW_DATA "${RAW_DATA}" )
+  string( REGEX REPLACE "\r?\n[ \t]*#[^\n]*"      "" RAW_DATA "${RAW_DATA}" )
 
   foreach( I IN LISTS OPTS_ENUMS )
     set( ENUM_NS    "" )
