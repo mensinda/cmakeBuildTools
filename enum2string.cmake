@@ -298,7 +298,7 @@ function( enum2str_add )
         string( APPEND PADDING " " )
       endforeach()
 
-      file( APPEND "${CPP_FILE}" "${IND}if( ( _var & ${ENUM_NS}${I}${PADDING}) == ${ENUM_NS}${I}${PADDING}) list.emplace_back( \"${I}\"${PADDING});\n" )
+      file( APPEND "${CPP_FILE}" "${IND}if( ( _var & static_cast<${OPTS_BITFIELD_TYPE}>(${ENUM_NS}${I})${PADDING}) == static_cast<${OPTS_BITFIELD_TYPE}>(${ENUM_NS}${I})${PADDING}) list.emplace_back( \"${I}\"${PADDING});\n" )
     endforeach()
 
     file( APPEND "${CPP_FILE}" "\n${IND}return list;\n" )
